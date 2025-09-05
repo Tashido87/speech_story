@@ -38,7 +38,6 @@ body {
 .gemini-gradient-text {
     background: -webkit-linear-gradient(45deg, #4285F4, #9B72CB, #D96570, #F2A60C);
     -webkit-background-clip: text;
-    background-clip: text; /* Added for compatibility */
     -webkit-text-fill-color: transparent;
 }
 
@@ -70,7 +69,9 @@ body {
     width: 100%;
 }
 
-.history-item-container .edit-icon {
+/* MODIFICATION: Combined styles for both icons */
+.history-item-container .edit-icon,
+.history-item-container .delete-icon {
     visibility: hidden;
     opacity: 0;
     transition: visibility 0s, opacity 0.2s linear;
@@ -78,9 +79,15 @@ body {
     padding: 4px;
 }
 
-.history-item-container:hover .edit-icon {
+.history-item-container:hover .edit-icon,
+.history-item-container:hover .delete-icon {
     visibility: visible;
     opacity: 1;
+}
+
+/* Added hover color for the delete icon */
+.delete-icon:hover {
+    color: #ef4444; /* red-500 */
 }
 
 .history-title-input {
