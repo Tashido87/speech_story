@@ -12,7 +12,7 @@
 </head>
 <body class="flex h-screen">
 
-    <aside id="sidebar" class="bg-[#1a1a1b] w-72 flex flex-col p-4 transition-transform -translate-x-full md:translate-x-0 md:relative absolute z-20 h-full">
+    <aside id="sidebar" class="bg-[#1a1a1b] w-72 flex flex-col p-4 transition-transform -translate-x-full md:translate-x-0 md:relative absolute z-30 h-full">
         <button id="new-story-btn" class="flex items-center justify-between w-full p-3 rounded-lg hover:bg-[#2a2a2c] text-left text-sm">
             <span>New Story</span>
             <i class="fas fa-pen-to-square"></i>
@@ -28,28 +28,20 @@
     </aside>
 
     <main class="flex-1 flex flex-col relative">
+        <div id="main-content-overlay" class="hidden md:hidden absolute inset-0 bg-black/50 z-20"></div>
+
         <header class="main-header p-4 flex items-center">
-            <button id="menu-toggle" class="md:hidden p-2 rounded-full bg-gray-800 hover:bg-gray-700 mr-4">
+            <button id="menu-toggle" class="md:hidden p-2 rounded-full bg-gray-800 hover:bg-gray-700 mr-4 z-10">
                 <i class="fas fa-bars"></i>
             </button>
             <h1 class="text-2xl diary-title">Tashido's Diary</h1>
-
-            <div class="ml-auto">
-                <select id="language-select" class="bg-[#2a2a2c] border border-gray-600 rounded-md p-2 text-sm">
-                    <option value="my-MM">Burmese (Myanmar)</option>
-                    <option value="en-US">English (US)</option>
-                    <option value="en-GB">English (UK)</option>
-                    <option value="es-ES">Spanish</option>
-                    <option value="fr-FR">French</option>
-                </select>
-            </div>
         </header>
         <div id="chat-container" class="flex-1 p-6 overflow-y-auto pb-32">
              <div id="welcome-message" class="text-center mt-20">
                 <h1 class="text-5xl font-bold gemini-gradient-text">Hello there!</h1>
                 <p class="mt-4 text-xl text-gray-400">Click the microphone to start transcribing your thoughts.</p>
             </div>
-        </div>
+            </div>
 
         <div class="absolute bottom-0 left-0 right-0 p-4 bg-transparent">
             <div class="max-w-3xl mx-auto">
