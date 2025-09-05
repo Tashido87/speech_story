@@ -12,7 +12,6 @@
 </head>
 <body class="flex h-screen">
 
-    <!-- Sidebar for Conversation History -->
     <aside id="sidebar" class="bg-[#1a1a1b] w-72 flex flex-col p-4 transition-transform -translate-x-full md:translate-x-0 md:relative absolute z-20 h-full">
         <button id="new-story-btn" class="flex items-center justify-between w-full p-3 rounded-lg hover:bg-[#2a2a2c] text-left text-sm">
             <span>New Story</span>
@@ -21,32 +20,37 @@
         <div class="mt-4 flex-grow overflow-y-auto">
             <h2 class="text-xs text-gray-400 font-semibold mb-2 px-3">Recent</h2>
             <div id="history-list">
-                <!-- History items will be populated by JS -->
-            </div>
+                </div>
         </div>
         <div class="border-t border-gray-700 pt-4 text-xs text-gray-400">
              <p>Powered by Gemini</p>
         </div>
     </aside>
 
-    <!-- Main Chat Interface -->
     <main class="flex-1 flex flex-col relative">
         <header class="main-header p-4 flex items-center">
             <button id="menu-toggle" class="md:hidden p-2 rounded-full bg-gray-800 hover:bg-gray-700 mr-4">
                 <i class="fas fa-bars"></i>
             </button>
             <h1 class="text-2xl diary-title">Tashido's Diary</h1>
+
+            <div class="ml-auto">
+                <select id="language-select" class="bg-[#2a2a2c] border border-gray-600 rounded-md p-2 text-sm">
+                    <option value="my-MM">Burmese (Myanmar)</option>
+                    <option value="en-US">English (US)</option>
+                    <option value="en-GB">English (UK)</option>
+                    <option value="es-ES">Spanish</option>
+                    <option value="fr-FR">French</option>
+                    </select>
+            </div>
         </header>
         <div id="chat-container" class="flex-1 p-6 overflow-y-auto pb-32">
-             <!-- Welcome Message -->
-            <div id="welcome-message" class="text-center mt-20">
+             <div id="welcome-message" class="text-center mt-20">
                 <h1 class="text-5xl font-bold gemini-gradient-text">Hello there!</h1>
                 <p class="mt-4 text-xl text-gray-400">Click the microphone to start transcribing your thoughts.</p>
             </div>
-            <!-- Chat messages will be populated by JS -->
-        </div>
+            </div>
 
-        <!-- Chat Input Box -->
         <div class="absolute bottom-0 left-0 right-0 p-4 bg-transparent">
             <div class="max-w-3xl mx-auto">
                  <div id="recording-controls" class="hidden items-center justify-center mb-4 space-x-4">
@@ -70,4 +74,3 @@
     <script src="script.js"></script>
 </body>
 </html>
-
