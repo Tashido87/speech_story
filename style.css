@@ -2,7 +2,7 @@ body {
     font-family: 'Inter', sans-serif;
     background-color: #131314;
     color: #e3e3e3;
-    overflow-x: hidden; /* Prevent horizontal scrolling */
+    overflow: hidden;
 }
 
 .diary-title {
@@ -33,11 +33,14 @@ body {
 
 .history-item.active {
     background-color: #333437;
+    font-weight: 600;
 }
+
 
 .gemini-gradient-text {
     background: -webkit-linear-gradient(45deg, #4285F4, #9B72CB, #D96570, #F2A60C);
     -webkit-background-clip: text;
+    background-clip: text; /* Added for compatibility */
     -webkit-text-fill-color: transparent;
 }
 
@@ -51,6 +54,7 @@ body {
     display: inline-block;
     box-sizing: border-box;
     animation: rotation 1s linear infinite;
+    margin-right: 8px;
 }
 
 @keyframes rotation {
@@ -69,8 +73,7 @@ body {
     width: 100%;
 }
 
-.history-item-container .edit-icon,
-.history-item-container .delete-icon {
+.history-item-container .edit-icon {
     visibility: hidden;
     opacity: 0;
     transition: visibility 0s, opacity 0.2s linear;
@@ -78,14 +81,9 @@ body {
     padding: 4px;
 }
 
-.history-item-container:hover .edit-icon,
-.history-item-container:hover .delete-icon {
+.history-item-container:hover .edit-icon {
     visibility: visible;
     opacity: 1;
-}
-
-.delete-icon:hover {
-    color: #ef4444; /* red-500 */
 }
 
 .history-title-input {
@@ -96,43 +94,4 @@ body {
     color: white;
     padding: 2px 4px;
     outline: none;
-}
-
-/* --- MODIFICATION: Styles for Mobile View --- */
-
-/* Overlay for when the sidebar is open on mobile */
-.mobile-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 15; /* Below sidebar, above everything else */
-    transition: opacity 0.3s ease-in-out;
-}
-
-/* Styles for screens smaller than 768px */
-@media (max-width: 767px) {
-    .diary-title {
-        font-size: 1.25rem; /* text-xl */
-    }
-
-    #welcome-message h1 {
-        font-size: 2.25rem; /* text-4xl */
-    }
-    
-    #welcome-message p {
-        font-size: 1rem; /* text-base */
-    }
-
-    #chat-container {
-        padding: 1rem; /* p-4 */
-        padding-bottom: 7rem; /* pb-28 */
-    }
-
-    /* Make input area slightly smaller on mobile */
-    .absolute.bottom-0 {
-        padding: 0.5rem; /* p-2 */
-    }
 }
