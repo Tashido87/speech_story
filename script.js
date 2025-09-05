@@ -40,8 +40,29 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentConversationId = null;
     let finalTranscript = '';
 
+    // --- MODIFICATION: Mobile Sidebar Logic ---
+    const toggleMobileSidebar = () => {
+        sidebar.classList.toggle('-translate-x-full');
+        const overlay = document.querySelector('.mobile-overlay');
+
+        if (!sidebar.classList.contains('-translate-x-full')) {
+            // If sidebar is open and overlay doesn't exist, create it
+            if (!overlay) {
+                const newOverlay = document.createElement('div');
+                newOverlay.className = 'mobile-overlay';
+                document.body.appendChild(newOverlay);
+                newOverlay.addEventListener('click', toggleMobileSidebar);
+            }
+        } else {
+            // If sidebar is closed, remove overlay
+            if (overlay) {
+                overlay.remove();
+            }
+        }
+    };
+    
     // --- Event Listeners ---
-    menuToggle.addEventListener('click', () => sidebar.classList.toggle('-translate-x-full'));
+    menuToggle.addEventListener('click', toggleMobileSidebar); // Use the new toggle function
     micBtn.addEventListener('click', toggleRecording);
     sendBtn.addEventListener('click', handleTextInput);
     stopBtn.addEventListener('click', stopRecording);
@@ -168,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
             button.innerHTML = '<div class="loader"></div><span>Polishing...</span>';
             button.disabled = true;
             const polishLanguage = languageSelect.options[languageSelect.selectedIndex].text.split(' ')[0];
-            const prompt = `Your task is to clean up a raw speech transcription in ${polishLanguage}. Please follow these rules:\n1. Correct any spelling mistakes and typos.\n2. Fix grammatical errors and ensure proper sentence structure and punctuation.\n3. Remove filler words (like "umm", "uh", "like", etc.) and unnecessary repetitions.\n4. **Crucially, preserve the original tone and speaking style.** Do not make the text more formal or change the vocabulary. The goal is to produce a clean, readable version of what was actually said.\n\nOriginal Text: "${text}"\n\nReturn ONLY the corrected ${polishLanguage} text.`;
+            const prompt = `You are an expert editor for Burmese speech transcriptions. Your task is to clean up the raw text below by following these strict rules:\n\n1.  **Correct Spelling Based on Context:** Pay close attention to words that sound similar but have different meanings and spellings. For example, a common mistake is transcribing "စမ်းကြည့်" (to test/try) as "ဆန်းကြည့်" (to look strange), or "အချောသတ်" (to finalize/polish) as "အချောတတ်" (to be good at being smooth). Always choose the spelling that makes sense in the context of the sentence.\n\n2.  **Fix Grammar and Punctuation:** Correct grammatical errors and add appropriate Burmese punctuation (like '၊' and '။') to create well-formed sentences.\n\n3.  **Remove Fillers:** Delete filler words and unnecessary repetitions (e.g., "ပေါ့နော်", "လေ", etc.) to make the text clean and direct.\n\n4.  **Preserve Original Style:** It is crucial to maintain the user's original tone and speaking style. Do not make the text more formal.\n\n---\n**Example of Correction:**\n- **Original:** "မြန်မာစာတာလို့ပြောတဲ့ဟာကိုပြန်အချောတတ်တဲ့ဟာမျိုးပြန်ဆန်းကြည့်တာပေါ့နော်။"\n- **Corrected:** "မြန်မာစာလို့ပြောတဲ့ဟာကို ပြန်အချောသတ်တဲ့ဟာမျိုး ပြန်စမ်းကြည့်တာ။"\n---\n\nNow, please correct the following text using the same rules.\n\n**Original Text:** "${text}"\n\nReturn ONLY the corrected Burmese text.`;
             try {
                 const polishedText = await callGeminiAPI(prompt);
                 document.getElementById(messageId).innerText = polishedText;
@@ -246,7 +267,6 @@ document.addEventListener('DOMContentLoaded', () => {
         conversations.forEach(conv => {
             const item = document.createElement('button');
             item.className = `w-full text-left p-3 rounded-lg hover:bg-[#2a2a2c] text-sm truncate history-item ${conv.id === currentConversationId ? 'active' : ''}`;
-            // --- MODIFICATION: Added delete icon ---
             item.innerHTML = `
                 <div class="history-item-container">
                     <span class="truncate flex-1 mr-2">${conv.title}</span>
@@ -254,7 +274,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     <i class="fas fa-trash delete-icon"></i>
                 </div>`;
             
-            // --- MODIFICATION: Added event listeners for edit and delete ---
             item.querySelector('.edit-icon').addEventListener('click', (e) => {
                 e.stopPropagation();
                 editConversationTitle(conv.id, e.currentTarget.parentElement);
@@ -293,7 +312,6 @@ document.addEventListener('DOMContentLoaded', () => {
         input.addEventListener('keydown', (e) => { if (e.key === 'Enter') input.blur(); });
     }
     
-    // --- MODIFICATION: New function to delete conversations ---
     function deleteConversation(convId) {
         if (!confirm('Are you sure you want to delete this story?')) return;
 
@@ -302,13 +320,10 @@ document.addEventListener('DOMContentLoaded', () => {
             conversations.splice(index, 1);
             saveConversations();
 
-            // If the deleted conversation was the active one, load a different one or start new
             if (convId === currentConversationId) {
                 if (conversations.length > 0) {
-                    // Load the first available conversation
                     loadConversation(conversations[0].id);
                 } else {
-                    // If no conversations left, start a new one
                     startNewStory();
                 }
             }
@@ -337,7 +352,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         scrollToBottom();
         renderHistory();
-        if (window.innerWidth < 768) sidebar.classList.add('-translate-x-full');
+
+        // --- MODIFICATION: Close sidebar on mobile after selection ---
+        if (window.innerWidth < 768 && !sidebar.classList.contains('-translate-x-full')) {
+            toggleMobileSidebar();
+        }
     }
 
     function saveMessageToHistory(role, content) {
