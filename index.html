@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tashido's Diary</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="flex h-screen">
+
+    <!-- Sidebar for Conversation History -->
+    <aside id="sidebar" class="bg-[#1a1a1b] w-72 flex flex-col p-4 transition-transform -translate-x-full md:translate-x-0 md:relative absolute z-20 h-full">
+        <button id="new-story-btn" class="flex items-center justify-between w-full p-3 rounded-lg hover:bg-[#2a2a2c] text-left text-sm">
+            <span>New Story</span>
+            <i class="fas fa-pen-to-square"></i>
+        </button>
+        <div class="mt-4 flex-grow overflow-y-auto">
+            <h2 class="text-xs text-gray-400 font-semibold mb-2 px-3">Recent</h2>
+            <div id="history-list">
+                <!-- History items will be populated by JS -->
+            </div>
+        </div>
+        <div class="border-t border-gray-700 pt-4 text-xs text-gray-400">
+             <p>Powered by Gemini</p>
+        </div>
+    </aside>
+
+    <!-- Main Chat Interface -->
+    <main class="flex-1 flex flex-col relative">
+        <header class="main-header p-4 flex items-center">
+            <button id="menu-toggle" class="md:hidden p-2 rounded-full bg-gray-800 hover:bg-gray-700 mr-4">
+                <i class="fas fa-bars"></i>
+            </button>
+            <h1 class="text-2xl diary-title">Tashido's Diary</h1>
+        </header>
+        <div id="chat-container" class="flex-1 p-6 overflow-y-auto pb-32">
+             <!-- Welcome Message -->
+            <div id="welcome-message" class="text-center mt-20">
+                <h1 class="text-5xl font-bold gemini-gradient-text">Hello there!</h1>
+                <p class="mt-4 text-xl text-gray-400">Click the microphone to start transcribing your thoughts.</p>
+            </div>
+            <!-- Chat messages will be populated by JS -->
+        </div>
+
+        <!-- Chat Input Box -->
+        <div class="absolute bottom-0 left-0 right-0 p-4 bg-transparent">
+            <div class="max-w-3xl mx-auto">
+                 <div id="recording-controls" class="hidden items-center justify-center mb-4 space-x-4">
+                    <button id="pause-resume-btn" class="w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white text-lg hover:bg-blue-700"><i class="fas fa-pause"></i></button>
+                    <button id="stop-btn" class="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center text-white text-lg hover:bg-red-700"><i class="fas fa-stop"></i></button>
+                </div>
+                <div class="bg-[#1a1a1b] rounded-full flex items-center p-3 shadow-lg">
+                    <input id="chat-input" type="text" class="flex-1 bg-transparent text-white placeholder-gray-400 outline-none px-4" placeholder="Type a command or start speaking...">
+                    <button id="mic-btn" class="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white text-lg hover:bg-blue-700 ml-2">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    <button id="send-btn" class="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center text-white text-lg hover:bg-gray-600 ml-2 hidden">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                 <p class="text-xs text-center text-gray-500 mt-2">This is for personal use. Your data is processed locally and with the Gemini API. Review Google's privacy policy.</p>
+            </div>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
+
