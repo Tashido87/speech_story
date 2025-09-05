@@ -2,7 +2,7 @@ body {
     font-family: 'Inter', sans-serif;
     background-color: #131314;
     color: #e3e3e3;
-    overflow: hidden;
+    overflow-x: hidden; /* Prevent horizontal scrolling */
 }
 
 .diary-title {
@@ -69,7 +69,6 @@ body {
     width: 100%;
 }
 
-/* MODIFICATION: Combined styles for both icons */
 .history-item-container .edit-icon,
 .history-item-container .delete-icon {
     visibility: hidden;
@@ -85,7 +84,6 @@ body {
     opacity: 1;
 }
 
-/* Added hover color for the delete icon */
 .delete-icon:hover {
     color: #ef4444; /* red-500 */
 }
@@ -98,4 +96,43 @@ body {
     color: white;
     padding: 2px 4px;
     outline: none;
+}
+
+/* --- MODIFICATION: Styles for Mobile View --- */
+
+/* Overlay for when the sidebar is open on mobile */
+.mobile-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 15; /* Below sidebar, above everything else */
+    transition: opacity 0.3s ease-in-out;
+}
+
+/* Styles for screens smaller than 768px */
+@media (max-width: 767px) {
+    .diary-title {
+        font-size: 1.25rem; /* text-xl */
+    }
+
+    #welcome-message h1 {
+        font-size: 2.25rem; /* text-4xl */
+    }
+    
+    #welcome-message p {
+        font-size: 1rem; /* text-base */
+    }
+
+    #chat-container {
+        padding: 1rem; /* p-4 */
+        padding-bottom: 7rem; /* pb-28 */
+    }
+
+    /* Make input area slightly smaller on mobile */
+    .absolute.bottom-0 {
+        padding: 0.5rem; /* p-2 */
+    }
 }
