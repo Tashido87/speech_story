@@ -1,7 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- IMPORTANT ---
-    // Make sure to replace "YOUR_API_KEY" with your actual Gemini API key.
     const GEMINI_API_KEY = "AIzaSyAwhaeum0GPgiZTd1e2x2SdFjAQeER8mEo";
 
     // DOM Elements
@@ -17,7 +15,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const historyList = document.getElementById('history-list');
     const sidebar = document.getElementById('sidebar');
     const menuToggle = document.getElementById('menu-toggle');
-    const languageSelect = document.getElementById('language-select'); // Language dropdown
+    const languageSelect = document.getElementById('language-select');
 
     // Speech Recognition Setup
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -29,17 +27,12 @@ document.addEventListener('DOMContentLoaded', () => {
         recognition = new SpeechRecognition();
         recognition.continuous = true;
         recognition.interimResults = true;
-        
-        // --- MODIFICATION 1: Language Selection ---
-        // Set language from the dropdown and listen for changes.
         recognition.lang = languageSelect.value;
         languageSelect.addEventListener('change', () => {
             recognition.lang = languageSelect.value;
-            console.log(`Language changed to: ${recognition.lang}`);
         });
-
     } else {
-        alert("Sorry, your browser doesn't support the Speech Recognition API. Please try Chrome or Edge.");
+        alert("Sorry, your browser doesn't support the Speech Recognition API.");
     }
 
     // App State
@@ -48,24 +41,16 @@ document.addEventListener('DOMContentLoaded', () => {
     let finalTranscript = '';
 
     // --- Event Listeners ---
-
     menuToggle.addEventListener('click', () => sidebar.classList.toggle('-translate-x-full'));
     micBtn.addEventListener('click', toggleRecording);
     sendBtn.addEventListener('click', handleTextInput);
     stopBtn.addEventListener('click', stopRecording);
     pauseResumeBtn.addEventListener('click', togglePause);
     newStoryBtn.addEventListener('click', startNewStory);
-
     chatInput.addEventListener('input', () => {
-        if (chatInput.value.trim() !== '') {
-            micBtn.classList.add('hidden');
-            sendBtn.classList.remove('hidden');
-        } else {
-            micBtn.classList.remove('hidden');
-            sendBtn.classList.add('hidden');
-        }
+        micBtn.classList.toggle('hidden', chatInput.value.trim() !== '');
+        sendBtn.classList.toggle('hidden', chatInput.value.trim() === '');
     });
-
     chatInput.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -74,27 +59,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Core Functions ---
-
     function toggleRecording() {
         if (!SpeechRecognition) return;
-        if (isRecording && !isPaused) { 
-            stopRecording();
-        } else {
-            startRecording();
-        }
+        isRecording && !isPaused ? stopRecording() : startRecording();
     }
 
     function startRecording() {
         if (currentConversationId === null) startNewStory();
-        
         welcomeMessage.classList.add('hidden');
         isRecording = true;
         isPaused = false;
-        
         finalTranscript = '';
-        
         recognition.start();
-
         micBtn.innerHTML = '<i class="fas fa-stop text-red-400"></i>';
         micBtn.classList.add('animate-pulse');
         recordingControls.classList.remove('hidden');
@@ -111,7 +87,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function togglePause() {
         if (!isRecording) return;
-
         isPaused = !isPaused;
         if (isPaused) {
             recognition.stop();
@@ -137,7 +112,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     recognition.onstart = () => console.log('Speech recognition started.');
-
     recognition.onresult = (event) => {
         let interimTranscript = '';
         for (let i = event.resultIndex; i < event.results.length; ++i) {
@@ -150,38 +124,27 @@ document.addEventListener('DOMContentLoaded', () => {
         chatInput.value = finalTranscript + interimTranscript;
     };
     
-    // --- MODIFICATION 2: Continuous Recording ---
-    // This function now restarts recognition if it stops unexpectedly.
     recognition.onend = () => {
         console.log('Speech recognition ended.');
-        
-        // Check if the recording should still be active (i.e., not manually stopped or paused)
         if (isRecording && !isPaused) {
             console.log('Recognition timed out, restarting...');
-            recognition.start(); // Restart it automatically
-            return; // Exit to prevent UI changes
+            recognition.start();
+            return;
         }
-        
-        // This part only runs if the stop was intentional
         micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
         micBtn.classList.remove('animate-pulse');
         recordingControls.classList.add('hidden');
-        
         if (finalTranscript.trim()) {
             addUserMessage(finalTranscript.trim());
             addBotMessage(finalTranscript.trim(), true);
         }
         chatInput.value = '';
-        finalTranscript = ''; // Clear for next recording
+        finalTranscript = '';
     };
     
-    recognition.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
-        console.error('Error message:', event.message);
-    };
+    recognition.onerror = (event) => console.error('Speech recognition error:', event.error, event.message);
 
     // --- UI & Message Handling ---
-
     function addUserMessage(text) {
         const messageHTML = `<div class="flex justify-end mb-4"><div class="bg-blue-600 text-white rounded-lg p-3 max-w-lg">${text}</div></div>`;
         chatContainer.insertAdjacentHTML('beforeend', messageHTML);
@@ -191,19 +154,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function addBotMessage(text, withActions = false) {
         const messageId = `msg-${Date.now()}`;
-        const actionsHTML = withActions ? `
-            <div class="mt-2 flex items-center space-x-2">
-                <button onclick="window.app.polishText('${messageId}', \`${text.replace(/`/g, '\\`')}\`)" class="flex items-center space-x-1 text-gray-400 hover:text-white text-sm"><i class="fas fa-wand-magic-sparkles"></i><span>Polish</span></button>
-                <button onclick="window.app.copyText('${messageId}')" class="flex items-center space-x-1 text-gray-400 hover:text-white text-sm"><i class="fas fa-copy"></i><span>Copy</span></button>
-            </div>` : '';
-
-        const messageHTML = `
-            <div class="flex justify-start mb-4">
-                <div class="bg-[#2a2a2c] rounded-lg p-3 max-w-lg">
-                    <div id="${messageId}" class="whitespace-pre-wrap">${text}</div>
-                    ${actionsHTML}
-                </div>
-            </div>`;
+        const actionsHTML = withActions ? `<div class="mt-2 flex items-center space-x-2"><button onclick="window.app.polishText('${messageId}', \`${text.replace(/`/g, '\\`')}\`)" class="flex items-center space-x-1 text-gray-400 hover:text-white text-sm"><i class="fas fa-wand-magic-sparkles"></i><span>Polish</span></button><button onclick="window.app.copyText('${messageId}')" class="flex items-center space-x-1 text-gray-400 hover:text-white text-sm"><i class="fas fa-copy"></i><span>Copy</span></button></div>` : '';
+        const messageHTML = `<div class="flex justify-start mb-4"><div class="bg-[#2a2a2c] rounded-lg p-3 max-w-lg"><div id="${messageId}" class="whitespace-pre-wrap">${text}</div>${actionsHTML}</div></div>`;
         chatContainer.insertAdjacentHTML('beforeend', messageHTML);
         saveMessageToHistory('assistant', text);
         scrollToBottom();
@@ -215,30 +167,16 @@ document.addEventListener('DOMContentLoaded', () => {
             const originalContent = button.innerHTML;
             button.innerHTML = '<div class="loader"></div><span>Polishing...</span>';
             button.disabled = true;
-
             const polishLanguage = languageSelect.options[languageSelect.selectedIndex].text.split(' ')[0];
-            const prompt = `Please act as a professional ${polishLanguage} editor. Review the following text, which is a transcription of my speech. Your task is to:
-            1. Correct all spelling and grammatical mistakes.
-            2. Remove filler words and repetitions to make the text more concise and fluent.
-            3. Structure the text into logical paragraphs.
-            4. Ensure each sentence ends correctly with appropriate punctuation.
-            5. Maintain the original meaning but enhance the style to be more professional and suitable for formal writing.
-            
-            Original Text: "${text}"
-            
-            Return ONLY the polished text.`;
-            
+            const prompt = `Your task is to clean up a raw speech transcription in ${polishLanguage}. Please follow these rules:\n1. Correct any spelling mistakes and typos.\n2. Fix grammatical errors and ensure proper sentence structure and punctuation.\n3. Remove filler words (like "umm", "uh", "like", etc.) and unnecessary repetitions.\n4. **Crucially, preserve the original tone and speaking style.** Do not make the text more formal or change the vocabulary. The goal is to produce a clean, readable version of what was actually said.\n\nOriginal Text: "${text}"\n\nReturn ONLY the corrected ${polishLanguage} text.`;
             try {
                 const polishedText = await callGeminiAPI(prompt);
                 document.getElementById(messageId).innerText = polishedText;
-                
                 const conv = conversations.find(c => c.id === currentConversationId);
                 if (conv) {
                     const msg = conv.messages.find(m => m.content === text);
-                    if (msg) {
-                        msg.content = polishedText;
-                        saveConversations();
-                    }
+                    if (msg) msg.content = polishedText;
+                    saveConversations();
                 }
             } catch (error) {
                 console.error("Error polishing text:", error);
@@ -248,7 +186,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 button.disabled = false;
             }
         },
-
         copyText: (messageId) => {
             const textToCopy = document.getElementById(messageId).innerText;
             navigator.clipboard.writeText(textToCopy).then(() => {
@@ -261,22 +198,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- MODIFICATION 3: Gemini API URL ---
-    // Updated the model to a newer, more reliable version.
     async function callGeminiAPI(prompt) {
         const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
-        const payload = {
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.5, topK: 1, topP: 1, maxOutputTokens: 2048 }
-        };
-        
         try {
-            const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-            if (!response.ok) {
-                const errorData = await response.json();
-                console.error("Gemini API Error Data:", errorData);
-                throw new Error(`API Error: ${response.status}`);
-            }
+            const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }]}) });
+            if (!response.ok) throw new Error(`API Error: ${response.status}`);
             const data = await response.json();
             return data.candidates[0].content.parts[0].text;
         } catch(error) {
@@ -290,7 +216,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- Conversation History Management ---
-
     function loadConversations() {
         const storedConvos = localStorage.getItem('voiceDiaryConversations');
         if (storedConvos) {
@@ -313,23 +238,32 @@ document.addEventListener('DOMContentLoaded', () => {
         welcomeMessage.classList.remove('hidden');
         renderHistory();
         saveConversations();
+        loadConversation(newId);
     }
 
     function renderHistory() {
         historyList.innerHTML = '';
         conversations.forEach(conv => {
             const item = document.createElement('button');
-            item.className = `w-full text-left p-3 rounded-lg hover:bg-[#2a2a2c] text-sm truncate ${conv.id === currentConversationId ? 'active' : ''}`;
+            item.className = `w-full text-left p-3 rounded-lg hover:bg-[#2a2a2c] text-sm truncate history-item ${conv.id === currentConversationId ? 'active' : ''}`;
+            // --- MODIFICATION: Added delete icon ---
             item.innerHTML = `
                 <div class="history-item-container">
                     <span class="truncate flex-1 mr-2">${conv.title}</span>
                     <i class="fas fa-edit edit-icon"></i>
+                    <i class="fas fa-trash delete-icon"></i>
                 </div>`;
-
-            item.querySelector('.fa-edit').addEventListener('click', (e) => {
+            
+            // --- MODIFICATION: Added event listeners for edit and delete ---
+            item.querySelector('.edit-icon').addEventListener('click', (e) => {
                 e.stopPropagation();
                 editConversationTitle(conv.id, e.currentTarget.parentElement);
             });
+            item.querySelector('.delete-icon').addEventListener('click', (e) => {
+                e.stopPropagation();
+                deleteConversation(conv.id);
+            });
+            
             item.addEventListener('click', () => loadConversation(conv.id));
             historyList.appendChild(item);
         });
@@ -349,16 +283,37 @@ document.addEventListener('DOMContentLoaded', () => {
         const save = () => {
             const newTitle = input.value.trim() || 'Untitled';
             const conv = conversations.find(c => c.id === convId);
-            if (conv) {
-                conv.title = newTitle;
-                saveConversations();
-            }
+            if (conv) conv.title = newTitle;
+            saveConversations();
             container.replaceChild(titleSpan, input);
             titleSpan.innerText = newTitle;
         };
 
         input.addEventListener('blur', save);
         input.addEventListener('keydown', (e) => { if (e.key === 'Enter') input.blur(); });
+    }
+    
+    // --- MODIFICATION: New function to delete conversations ---
+    function deleteConversation(convId) {
+        if (!confirm('Are you sure you want to delete this story?')) return;
+
+        const index = conversations.findIndex(c => c.id === convId);
+        if (index > -1) {
+            conversations.splice(index, 1);
+            saveConversations();
+
+            // If the deleted conversation was the active one, load a different one or start new
+            if (convId === currentConversationId) {
+                if (conversations.length > 0) {
+                    // Load the first available conversation
+                    loadConversation(conversations[0].id);
+                } else {
+                    // If no conversations left, start a new one
+                    startNewStory();
+                }
+            }
+            renderHistory();
+        }
     }
 
     function loadConversation(id) {
@@ -369,32 +324,27 @@ document.addEventListener('DOMContentLoaded', () => {
         chatContainer.innerHTML = '';
         welcomeMessage.classList.add('hidden');
 
-        // This is a simplified load. Let's rebuild the chat from history.
-        chatContainer.innerHTML = ''; // Clear it first.
         conversation.messages.forEach(msg => {
             if (msg.role === 'user') {
                  const messageHTML = `<div class="flex justify-end mb-4"><div class="bg-blue-600 text-white rounded-lg p-3 max-w-lg">${msg.content}</div></div>`;
                  chatContainer.insertAdjacentHTML('beforeend', messageHTML);
             } else {
-                 addBotMessage(msg.content, true); // Use existing function to ensure actions are added
+                 addBotMessage(msg.content, true);
             }
         });
         
-        if (conversation.messages.length === 0) {
-            welcomeMessage.classList.remove('hidden');
-        }
+        if (conversation.messages.length === 0) welcomeMessage.classList.remove('hidden');
 
         scrollToBottom();
         renderHistory();
         if (window.innerWidth < 768) sidebar.classList.add('-translate-x-full');
     }
 
-
     function saveMessageToHistory(role, content) {
         const conv = conversations.find(c => c.id === currentConversationId);
         if (conv) {
             conv.messages.push({ role, content });
-            if (conv.title === 'New Story' && role === 'user') { // Only update title from user's first message
+            if (conv.title === 'New Story' && role === 'user') {
                 conv.title = content.substring(0, 30) + (content.length > 30 ? '...' : '');
                 renderHistory();
             }
