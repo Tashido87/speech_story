@@ -1,5 +1,7 @@
 document.addEventListener('DOMContentLoaded', () => {
 
+    // --- IMPORTANT ---
+    // Make sure to replace "YOUR_API_KEY" with your actual Gemini API key.
     const GEMINI_API_KEY = "AIzaSyAwhaeum0GPgiZTd1e2x2SdFjAQeER8mEo";
 
     // DOM Elements
@@ -15,6 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const historyList = document.getElementById('history-list');
     const sidebar = document.getElementById('sidebar');
     const menuToggle = document.getElementById('menu-toggle');
+    const languageSelect = document.getElementById('language-select'); // Language dropdown
 
     // Speech Recognition Setup
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -26,7 +29,15 @@ document.addEventListener('DOMContentLoaded', () => {
         recognition = new SpeechRecognition();
         recognition.continuous = true;
         recognition.interimResults = true;
-        recognition.lang = 'my-MM'; // Default to Burmese
+        
+        // --- MODIFICATION 1: Language Selection ---
+        // Set language from the dropdown and listen for changes.
+        recognition.lang = languageSelect.value;
+        languageSelect.addEventListener('change', () => {
+            recognition.lang = languageSelect.value;
+            console.log(`Language changed to: ${recognition.lang}`);
+        });
+
     } else {
         alert("Sorry, your browser doesn't support the Speech Recognition API. Please try Chrome or Edge.");
     }
@@ -66,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function toggleRecording() {
         if (!SpeechRecognition) return;
-        if (isRecording && !isPaused) { // If recording, the main button acts as a stop button
+        if (isRecording && !isPaused) { 
             stopRecording();
         } else {
             startRecording();
@@ -80,10 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
         isRecording = true;
         isPaused = false;
         
-        // Only clear transcript if it's a fresh start, not a resume
-        if (!isPaused) { 
-            finalTranscript = '';
-        }
+        finalTranscript = '';
         
         recognition.start();
 
@@ -124,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
             chatInput.value = '';
             micBtn.classList.remove('hidden');
             sendBtn.classList.add('hidden');
-            callGeminiAPI(text).then(response => addBotMessage(response, false)); // Regular chat has no polish
+            callGeminiAPI(text).then(response => addBotMessage(response, false));
         }
     }
 
@@ -142,25 +150,35 @@ document.addEventListener('DOMContentLoaded', () => {
         chatInput.value = finalTranscript + interimTranscript;
     };
     
+    // --- MODIFICATION 2: Continuous Recording ---
+    // This function now restarts recognition if it stops unexpectedly.
     recognition.onend = () => {
         console.log('Speech recognition ended.');
-        // Only process the transcript if we are not in a paused state
-        if (!isPaused) {
-            isRecording = false;
-            micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
-            micBtn.classList.remove('animate-pulse');
-            recordingControls.classList.add('hidden');
-            
-            if (finalTranscript.trim()) {
-                addUserMessage(finalTranscript.trim());
-                addBotMessage(finalTranscript.trim(), true);
-            }
-            chatInput.value = '';
-            finalTranscript = ''; // Clear for next recording
+        
+        // Check if the recording should still be active (i.e., not manually stopped or paused)
+        if (isRecording && !isPaused) {
+            console.log('Recognition timed out, restarting...');
+            recognition.start(); // Restart it automatically
+            return; // Exit to prevent UI changes
         }
+        
+        // This part only runs if the stop was intentional
+        micBtn.innerHTML = '<i class="fas fa-microphone"></i>';
+        micBtn.classList.remove('animate-pulse');
+        recordingControls.classList.add('hidden');
+        
+        if (finalTranscript.trim()) {
+            addUserMessage(finalTranscript.trim());
+            addBotMessage(finalTranscript.trim(), true);
+        }
+        chatInput.value = '';
+        finalTranscript = ''; // Clear for next recording
     };
     
-    recognition.onerror = (event) => console.error('Speech recognition error:', event.error);
+    recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        console.error('Error message:', event.message);
+    };
 
     // --- UI & Message Handling ---
 
@@ -198,16 +216,17 @@ document.addEventListener('DOMContentLoaded', () => {
             button.innerHTML = '<div class="loader"></div><span>Polishing...</span>';
             button.disabled = true;
 
-            const prompt = `Please act as a professional Burmese editor. Review the following text, which is a transcription of my speech. Your task is to:
+            const polishLanguage = languageSelect.options[languageSelect.selectedIndex].text.split(' ')[0];
+            const prompt = `Please act as a professional ${polishLanguage} editor. Review the following text, which is a transcription of my speech. Your task is to:
             1. Correct all spelling and grammatical mistakes.
             2. Remove filler words and repetitions to make the text more concise and fluent.
             3. Structure the text into logical paragraphs.
-            4. Ensure each sentence ends correctly with Burmese punctuation marks like '။' or '၊'.
+            4. Ensure each sentence ends correctly with appropriate punctuation.
             5. Maintain the original meaning but enhance the style to be more professional and suitable for formal writing.
             
             Original Text: "${text}"
             
-            Return ONLY the polished Burmese text.`;
+            Return ONLY the polished text.`;
             
             try {
                 const polishedText = await callGeminiAPI(prompt);
@@ -242,8 +261,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // --- MODIFICATION 3: Gemini API URL ---
+    // Updated the model to a newer, more reliable version.
     async function callGeminiAPI(prompt) {
-        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${GEMINI_API_KEY}`;
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${GEMINI_API_KEY}`;
         const payload = {
             contents: [{ parts: [{ text: prompt }] }],
             generationConfig: { temperature: 0.5, topK: 1, topP: 1, maxOutputTokens: 2048 }
@@ -251,7 +272,11 @@ document.addEventListener('DOMContentLoaded', () => {
         
         try {
             const response = await fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-            if (!response.ok) throw new Error(`API Error: ${response.status}`);
+            if (!response.ok) {
+                const errorData = await response.json();
+                console.error("Gemini API Error Data:", errorData);
+                throw new Error(`API Error: ${response.status}`);
+            }
             const data = await response.json();
             return data.candidates[0].content.parts[0].text;
         } catch(error) {
@@ -344,26 +369,32 @@ document.addEventListener('DOMContentLoaded', () => {
         chatContainer.innerHTML = '';
         welcomeMessage.classList.add('hidden');
 
+        // This is a simplified load. Let's rebuild the chat from history.
+        chatContainer.innerHTML = ''; // Clear it first.
         conversation.messages.forEach(msg => {
             if (msg.role === 'user') {
-                addUserMessage(msg.content);
+                 const messageHTML = `<div class="flex justify-end mb-4"><div class="bg-blue-600 text-white rounded-lg p-3 max-w-lg">${msg.content}</div></div>`;
+                 chatContainer.insertAdjacentHTML('beforeend', messageHTML);
             } else {
-                addBotMessage(msg.content, true);
+                 addBotMessage(msg.content, true); // Use existing function to ensure actions are added
             }
         });
         
-        if (conversation.messages.length === 0) welcomeMessage.classList.remove('hidden');
+        if (conversation.messages.length === 0) {
+            welcomeMessage.classList.remove('hidden');
+        }
 
         scrollToBottom();
         renderHistory();
         if (window.innerWidth < 768) sidebar.classList.add('-translate-x-full');
     }
 
+
     function saveMessageToHistory(role, content) {
         const conv = conversations.find(c => c.id === currentConversationId);
         if (conv) {
             conv.messages.push({ role, content });
-            if (conv.title === 'New Story') {
+            if (conv.title === 'New Story' && role === 'user') { // Only update title from user's first message
                 conv.title = content.substring(0, 30) + (content.length > 30 ? '...' : '');
                 renderHistory();
             }
